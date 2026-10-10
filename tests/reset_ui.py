@@ -23,6 +23,7 @@ with sync_playwright() as playwright:
         page.route('**/api/usage', lambda route: route.fulfill(json=data))
         page.goto(base, wait_until='networkidle')
         expect(page.locator('.reset-time').first).to_contain_text(clock)
+        expect(page.locator('.countdown').first).to_be_hidden()
         expect(page.locator('.provider.claude .resets-unavailable')).to_be_visible()
         expect(page.locator('.provider.codex .reset-count')).to_have_text('2 available ›')
         page.locator('.provider.codex summary').click()

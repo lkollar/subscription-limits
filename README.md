@@ -89,7 +89,7 @@ Browser tests need a running app with both providers authenticated. Screenshots
 are written outside the repo. Optional `LIVE_USAGE_JSON` reads a private probe
 for schema validation; no probe is part of the test fixtures or package.
 `LIMITS_HOST_IP` supports explicit hostname resolution in HTTPS browser checks.
-Reset timestamps use the phone’s timezone alongside countdowns. Codex saved
+Reset dates and clock times use the phone’s timezone. Codex saved
 resets expose only the reported available count and expiry timestamps; Claude
 saved resets stay unavailable. Failed or expired readings show the saved count
 as "at last refresh". Expanding the row reveals expiry dates; it cannot redeem

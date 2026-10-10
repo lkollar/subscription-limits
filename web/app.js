@@ -25,15 +25,8 @@ for (const id of Object.keys(names)) {
   sections[id] = section;
 }
 function validTime(value) { return typeof value === 'string' && Number.isFinite(Date.parse(value)); }
-function remaining(value, now) {
-  if (!validTime(value)) return 'Reset time unavailable';
-  const seconds = Math.ceil((Date.parse(value) - now) / 1000);
-  if (seconds <= 0) return 'Reset due · awaiting fresh usage';
-  const mins = Math.ceil(seconds / 60);
-  const days = Math.floor(mins / 1440);
-  const hours = Math.floor((mins % 1440) / 60);
-  const minutes = mins % 60;
-  return `Resets in ${days ? `${days}d ` : ''}${hours ? `${hours}h ` : ''}${minutes}m`;
+function resetStatus(value) {
+  return validTime(value) ? 'Reset due · awaiting fresh usage' : 'Reset time unavailable';
 }
 function localTime(value, now, weekday = true) {
   if (!validTime(value)) return '';
@@ -76,11 +69,13 @@ function render() {
       progress.setAttribute('aria-label', `${names[id]} ${name === 'weekly' ? 'weekly' : 'five-hour'} remaining${stale ? ', stale' : ''}`);
       const exact = row.querySelector('.reset-time');
       const dated = usable && validTime(data.resetsAt) && Date.parse(data.resetsAt) > now;
-      exact.textContent = dated ? localTime(data.resetsAt, now) : '';
+      exact.textContent = dated ? `Resets · ${localTime(data.resetsAt, now)}` : '';
       exact.hidden = !dated;
       if (dated) exact.dateTime = data.resetsAt;
       else exact.removeAttribute('datetime');
-      row.querySelector('.countdown').textContent = usable ? remaining(data.resetsAt, now) : 'No window data available';
+      const reset = row.querySelector('.countdown');
+      reset.hidden = dated;
+      reset.textContent = usable ? resetStatus(data.resetsAt) : 'No window data available';
     }
     const resets = hasData ? provider?.savedResets : null;
     const known = resets && Number.isSafeInteger(resets.availableCount) && resets.availableCount >= 0;
