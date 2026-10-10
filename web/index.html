@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#f5f4ee">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Limits">
+  <meta name="description" content="Your Claude Code and Codex subscription limits.">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="apple-touch-icon" href="./icon-180.png">
+  <link rel="icon" type="image/png" href="./icon-192.png">
+  <link rel="stylesheet" href="./style.css">
+  <script src="./app.js" defer></script>
+  <title>Limits</title>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Limits<span class="title-dot" aria-hidden="true">.</span></h1>
+      <button id="refresh" type="button" aria-label="Refresh usage"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5M6.1 6.1A8.3 8.3 0 0 1 20 12M4 12a8.3 8.3 0 0 0 13.9 5.9"/></svg><span>Refresh</span></button>
+    </header>
+    <p class="intro">Room for your next idea.</p>
+    <p id="connection" role="status" aria-live="polite">Connecting to the server…</p>
+    <div id="providers" aria-busy="true"></div>
+    <footer>
+      <p>Updates every 5 minutes while the server is running.</p>
+      <p id="install">On iPhone: Share → Add to Home Screen.</p>
+    </footer>
+    <noscript>JavaScript is required to display usage and reset countdowns.</noscript>
+  </main>
+  <template id="provider-template">
+    <section class="provider" aria-labelledby="">
+      <div class="provider-heading"><h2></h2><span class="status"></span></div>
+      <p class="issue"></p>
+      <div class="window" data-window="fiveHour">
+        <div class="window-heading"><h3>Five-hour</h3><p class="percentage"></p></div>
+        <progress max="100" value="0" aria-label="Five-hour remaining"></progress>
+        <p class="reset"></p>
+      </div>
+      <div class="window" data-window="weekly">
+        <div class="window-heading"><h3>Weekly</h3><p class="percentage"></p></div>
+        <progress max="100" value="0" aria-label="Weekly remaining"></progress>
+        <p class="reset"></p>
+      </div>
+      <p class="last-success"></p>
+    </section>
+  </template>
+</body>
+</html>

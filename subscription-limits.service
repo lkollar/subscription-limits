@@ -1,0 +1,28 @@
+[Unit]
+Description=Claude Code and Codex subscription limits
+After=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/run/current-system/sw/bin/python3 %h/.local/share/subscription-limits/server.py
+WorkingDirectory=%h/.local/share/subscription-limits
+Environment=PYTHONUNBUFFERED=1
+Environment=PATH=%h/.local/bin:/run/current-system/sw/bin
+Environment=PUBLIC_HOST=localhost
+Environment=CODEXBAR_BIN=%h/.local/share/codexbar/0.74.0/codexbar
+StateDirectory=subscription-limits
+StateDirectoryMode=0700
+Restart=on-failure
+RestartSec=10
+TimeoutStopSec=15
+KillMode=control-group
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=%h/.claude %h/.claude.json %h/.codex %h/.codexbar %h/.config/codexbar %h/.cache
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+
+[Install]
+WantedBy=default.target

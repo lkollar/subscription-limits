@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+.impeccable/
+result
+result-*
+*.log
+.env
+.env.*
+var/
