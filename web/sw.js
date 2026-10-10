@@ -1,5 +1,5 @@
 'use strict';
-const CACHE = 'limits-shell-v3';
+const CACHE = 'limits-shell-v4';
 const SHELL = ['./', './index.html', './style.css', './app.js', './manifest.webmanifest', './icon-180.png', './icon-192.png', './icon-512.png'];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(SHELL)).then(() => self.skipWaiting()));

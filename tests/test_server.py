@@ -104,6 +104,36 @@ class Tests(unittest.TestCase):
         self.assertEqual(data['id'],'claude')
         self.assertEqual([c[c.index('--source')+1] for c in calls],['oauth','cli'])
 
+    def test_reset_allowlist(self):
+        data = row()
+        data['usage']['codexResetCredits'] = {'availableCount': 2, 'credits': [
+            {'status': 'available', 'expires_at': '2020-01-08T00:00:00Z', 'id': 'SECRET', 'title': 'SECRET'},
+            {'status': 'used', 'expires_at': '2020-01-09T00:00:00Z'},
+            {'status': 'available', 'expires_at': 'bad'}]}
+        result = limits.normalize(data, 'codex', NOW)
+        self.assertEqual(result['savedResets'], {'availableCount': 2, 'expiresAt': ['2020-01-08T00:00:00Z', None]})
+        self.assertNotIn('SECRET', json.dumps(result))
+        data['provider'] = 'claude'
+        self.assertIsNone(limits.normalize(data, 'claude', NOW)['savedResets'])
+
+    def test_reset_count_unknown_vs_zero(self):
+        self.assertIsNone(limits.saved_resets(None))
+        for value in [True, -1, '2', 1.5, None, 2**53]:
+            self.assertIsNone(limits.saved_resets({'availableCount': value}))
+        self.assertEqual(limits.saved_resets({'availableCount': 0}), {'availableCount': 0, 'expiresAt': []})
+
+    def test_reset_cache_allowlist(self):
+        with tempfile.TemporaryDirectory() as directory:
+            collector = limits.Collector(Path(directory))
+            data = row()
+            data['usage']['codexResetCredits'] = {'availableCount': 1, 'credits': [
+                {'status': 'available', 'expires_at': '2020-01-08T00:00:00Z', 'id': 'SECRET'}]}
+            with patch.object(limits, 'fetch', side_effect=lambda p: (limits.normalize({**data, 'provider': p}, p, NOW), None)):
+                collector.refresh()
+            saved = limits.Collector(Path(directory))
+            self.assertEqual(saved.good['codex']['savedResets']['availableCount'], 1)
+            self.assertNotIn('SECRET', (Path(directory)/'last-good.json').read_text())
+
     def test_real_data_contract(self):
         location=os.environ.get('LIVE_USAGE_JSON')
         if not location:self.skipTest('Set LIVE_USAGE_JSON for an optional private probe')
@@ -112,6 +142,6 @@ class Tests(unittest.TestCase):
             self.assertFalse(data.get('error'))
             normalized=limits.normalize(data,data['provider'])
             for window in normalized['windows'].values():self.assertIsNotNone(window)
-            self.assertEqual(set(normalized),{'id','lastSuccess','windows'})
+            self.assertEqual(set(normalized),{'id','lastSuccess','windows','savedResets'})
 
 if __name__=='__main__':unittest.main()

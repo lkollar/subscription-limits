@@ -39,3 +39,19 @@ footer p { margin:6px 0; }
 @media (max-width:350px) { main { padding-left:18px; padding-right:18px; } button span { display:none; } }
 @media (prefers-color-scheme:dark) { :root { --paper:#14231f; --ink:#f0f1e8; --muted:#afbeb6; --line:#3b4c43; --track:#34463e; --claude:#f5a583; --codex:#80cdb6; --warning:#ebbc7b; } }
 @media (display-mode:standalone) { #install { display:none; } }
+
+.reset { display:flex; flex-wrap:wrap; justify-content:space-between; gap:3px 12px; }
+.reset-time { color:var(--ink); font-weight:500; }
+.countdown { white-space:nowrap; }
+.saved-resets { margin-top:23px; border:1px solid var(--line); border-radius:12px; overflow:hidden; }
+.saved-resets summary { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:13px 14px; list-style:none; cursor:pointer; font-size:13px; min-height:48px; }
+.saved-resets summary::-webkit-details-marker { display:none; }
+.saved-resets summary:focus-visible { outline:3px solid var(--codex); outline-offset:-3px; }
+.reset-count { color:var(--accent); font-weight:650; }
+.saved-resets.problem .reset-count { color:var(--warning); }
+.reset-hint { font-size:11px; margin:0 14px 13px; color:var(--muted); line-height:1.6; }
+.reset-expiries { list-style:none; padding:0 14px 8px; margin:0; }
+.reset-expiries li { display:flex; flex-wrap:wrap; justify-content:space-between; gap:4px 12px; border-top:1px solid var(--line); padding:11px 0; font-size:12px; }
+.reset-expiries time { color:var(--muted); }
+.resets-unavailable { display:flex; justify-content:space-between; margin:23px 0 0; font-size:12px; color:var(--muted); }
+[hidden] { display:none !important; }

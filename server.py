@@ -36,6 +36,30 @@ def iso_now():
     return dt.datetime.now(dt.timezone.utc).isoformat(timespec='seconds').replace('+00:00', 'Z')
 
 
+def saved_resets(raw):
+    """Expose only the authoritative count and expiry timestamps."""
+    if not isinstance(raw, dict):
+        return None
+    count = raw.get('availableCount')
+    if isinstance(count, bool) or not isinstance(count, int) or not 0 <= count <= 2**53 - 1:
+        return None
+    expiries = []
+    credits = raw.get('credits')
+    if isinstance(credits, list):
+        for credit in credits:
+            if not isinstance(credit, dict) or credit.get('status') != 'available':
+                continue
+            expiry = credit.get('expires_at')
+            try:
+                timestamp(expiry)
+            except (ValueError, TypeError, OverflowError):
+                expiry = None
+            expiries.append(expiry)
+            if len(expiries) >= min(count, 100):
+                break
+    return {'availableCount': count, 'expiresAt': expiries if count else []}
+
+
 def normalize(row, provider, now=None):
     """Allowlist data; never forward identity, tokens, raw errors or details."""
     now = time.time() if now is None else now
@@ -63,7 +87,8 @@ def normalize(row, provider, now=None):
         windows[name] = window
     if not any(windows.values()):
         raise ValueError('No known windows')
-    return {'id': provider, 'lastSuccess': updated, 'windows': windows}
+    return {'id': provider, 'lastSuccess': updated, 'windows': windows,
+            'savedResets': saved_resets(usage.get('codexResetCredits')) if provider == 'codex' else None}
 
 
 def error_kind(row):
@@ -120,6 +145,13 @@ class Collector:
                 if item:
                     windows = item.get('windows', {})
                     usage = {'updatedAt': item.get('lastSuccess')}
+                    resets = item.get('savedResets')
+                    if isinstance(resets, dict):
+                        expiries = resets.get('expiresAt')
+                        usage['codexResetCredits'] = {
+                            'availableCount': resets.get('availableCount'),
+                            'credits': [{'status': 'available', 'expires_at': expiry}
+                                        for expiry in expiries] if isinstance(expiries, list) else []}
                     for name, field, minutes in [('fiveHour', 'primary', 300), ('weekly', 'secondary', 10080)]:
                         raw = windows.get(name)
                         if isinstance(raw, dict):
@@ -136,7 +168,7 @@ class Collector:
                 item = self.good.get(provider)
                 reset_due = item and any(window and window['resetsAt'] and timestamp(window['resetsAt']) <= now for window in item['windows'].values())
                 status = 'unavailable' if not item else 'stale' if provider in self.errors or reset_due or now - timestamp(item['lastSuccess']) > STALE_AFTER else 'fresh'
-                providers.append({**(item or {'id': provider, 'lastSuccess': None, 'windows': {'fiveHour': None, 'weekly': None}}),
+                providers.append({**(item or {'id': provider, 'lastSuccess': None, 'windows': {'fiveHour': None, 'weekly': None}, 'savedResets': None}),
                                   'status': status, 'error': self.errors.get(provider)})
             return {'providers': providers, 'refreshing': self.refreshing,
                     'serverTime': iso_now(), 'refreshIntervalSeconds': INTERVAL, 'staleAfterSeconds': STALE_AFTER}

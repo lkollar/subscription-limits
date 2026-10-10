@@ -35,6 +35,15 @@ function remaining(value, now) {
   const minutes = mins % 60;
   return `Resets in ${days ? `${days}d ` : ''}${hours ? `${hours}h ` : ''}${minutes}m`;
 }
+function localTime(value, now, weekday = true) {
+  if (!validTime(value)) return '';
+  const date = new Date(value);
+  const today = date.toDateString() === new Date(now).toDateString();
+  const clock = date.toLocaleTimeString(undefined, {hour:'2-digit', minute:'2-digit'});
+  return today ? `Today, ${clock}` : date.toLocaleDateString(undefined,
+    { ...(weekday ? {weekday:'short'} : {}), day:'numeric', month:'short',
+      ...(date.getFullYear() !== new Date(now).getFullYear() ? {year:'numeric'} : {}) }) + `, ${clock}`;
+}
 function render() {
   const now = Date.now() + offset;
   container.setAttribute('aria-busy', String(loading && !snapshot));
@@ -65,7 +74,45 @@ function render() {
       progress.hidden = !usable;
       progress.value = usable ? left : 0;
       progress.setAttribute('aria-label', `${names[id]} ${name === 'weekly' ? 'weekly' : 'five-hour'} remaining${stale ? ', stale' : ''}`);
-      row.querySelector('.reset').textContent = usable ? remaining(data.resetsAt, now) : 'No window data available';
+      const exact = row.querySelector('.reset-time');
+      const dated = usable && validTime(data.resetsAt) && Date.parse(data.resetsAt) > now;
+      exact.textContent = dated ? localTime(data.resetsAt, now) : '';
+      exact.hidden = !dated;
+      if (dated) exact.dateTime = data.resetsAt;
+      else exact.removeAttribute('datetime');
+      row.querySelector('.countdown').textContent = usable ? remaining(data.resetsAt, now) : 'No window data available';
+    }
+    const resets = hasData ? provider?.savedResets : null;
+    const known = resets && Number.isSafeInteger(resets.availableCount) && resets.availableCount >= 0;
+    const details = section.querySelector('.saved-resets');
+    details.hidden = !known;
+    section.querySelector('.resets-unavailable').hidden = Boolean(known);
+    if (known) {
+      const expiries = Array.isArray(resets.expiresAt) ? resets.expiresAt : [];
+      const due = expiries.some(expiry => validTime(expiry) && Date.parse(expiry) <= now);
+      const old = stale || due;
+      section.querySelector('.reset-count').textContent = `${resets.availableCount} ${old ? 'at last refresh' : 'available'} ›`;
+      details.classList.toggle('problem', old);
+      const valid = expiries.filter(validTime).sort((a,b) => Date.parse(a) - Date.parse(b));
+      section.querySelector('.reset-hint').textContent = old ? 'Saved reset availability may have changed. Refresh to check.' :
+        resets.availableCount === 0 ? 'No saved resets available.' : valid.length ?
+        `Earliest expires ${localTime(valid[0], now, false)}. View only.` : 'Expiry dates unavailable. View only.';
+      const list = section.querySelector('.reset-expiries');
+      // Preserve expansion while countdowns update; only rebuild changed rows.
+      const signature = JSON.stringify(expiries);
+      if (list.dataset.expiries !== signature || list.dataset.day !== new Date(now).toDateString()) {
+        list.dataset.expiries = signature;
+        list.dataset.day = new Date(now).toDateString();
+        list.replaceChildren();
+        expiries.forEach((expiry, index) => {
+          const row = document.createElement('li');
+          const label = document.createElement('span'); label.textContent = `Reset ${index + 1}`;
+          const time = document.createElement('time');
+          time.textContent = validTime(expiry) ? `Expires ${localTime(expiry, now, false)}` : 'Expiry unavailable';
+          if (validTime(expiry)) time.dateTime = expiry;
+          row.append(label, time); list.append(row);
+        });
+      }
     }
     section.querySelector('.last-success').textContent = hasData ? `Last success · ${new Date(provider.lastSuccess).toLocaleString(undefined, {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'})}` : 'Last success · never';
   }

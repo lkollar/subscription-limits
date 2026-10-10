@@ -25,7 +25,7 @@
     <p id="connection" role="status" aria-live="polite">Connecting to the server…</p>
     <div id="providers" aria-busy="true"></div>
     <footer>
-      <p>Updates every 5 minutes while the server is running.</p>
+      <p>Updates every 5 minutes. Times use your phone’s timezone.</p>
       <p id="install">On iPhone: Share → Add to Home Screen.</p>
     </footer>
     <noscript>JavaScript is required to display usage and reset countdowns.</noscript>
@@ -37,13 +37,19 @@
       <div class="window" data-window="fiveHour">
         <div class="window-heading"><h3>Five-hour</h3><p class="percentage"></p></div>
         <progress max="100" value="0" aria-label="Five-hour remaining"></progress>
-        <p class="reset"></p>
+        <p class="reset"><time class="reset-time"></time><span class="countdown"></span></p>
       </div>
       <div class="window" data-window="weekly">
         <div class="window-heading"><h3>Weekly</h3><p class="percentage"></p></div>
         <progress max="100" value="0" aria-label="Weekly remaining"></progress>
-        <p class="reset"></p>
+        <p class="reset"><time class="reset-time"></time><span class="countdown"></span></p>
       </div>
+      <details class="saved-resets" hidden>
+        <summary><span>Saved resets</span><span class="reset-count"></span></summary>
+        <p class="reset-hint"></p>
+        <ul class="reset-expiries"></ul>
+      </details>
+      <p class="resets-unavailable"><span>Saved resets</span><span>Unavailable</span></p>
       <p class="last-success"></p>
     </section>
   </template>

@@ -76,8 +76,8 @@ with sync_playwright() as playwright:
    page.route('**/api/usage',lambda route:route.fulfill(json=old))
    page.reload(wait_until='networkidle')
    expect(page.locator('.status')).to_have_text(['Stale','Stale'])
-   expect(page.locator('.provider.claude [data-window="fiveHour"] .reset')).to_have_text('Reset due · awaiting fresh usage')
-   expect(page.locator('.provider.claude [data-window="weekly"] .reset')).to_have_text('Reset time unavailable')
+   expect(page.locator('.provider.claude [data-window="fiveHour"] .countdown')).to_have_text('Reset due · awaiting fresh usage')
+   expect(page.locator('.provider.claude [data-window="weekly"] .countdown')).to_have_text('Reset time unavailable')
    print('aging: old success stale; expired/missing reset handled explicitly')
    # No successful data and no network must render a useful shell, too.
    page.unroute('**/api/usage')
